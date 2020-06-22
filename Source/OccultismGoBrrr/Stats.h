@@ -76,6 +76,6 @@ class OCCULTISMGOBRRR_API UStats : public UObject
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Attribute")
-		static void SumAttributes(const FAttributes FirstsAttributes, const FAttributes SecondAttributes, FAttributes &out);
+		static FAttributes SumAttributes(const FAttributes FirstsAttributes, const FAttributes SecondAttributes);
 	
 };

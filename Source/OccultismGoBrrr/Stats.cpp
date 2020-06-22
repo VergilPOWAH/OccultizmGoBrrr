@@ -5,13 +5,8 @@
 
 
 
-void UStats::SumAttributes(const FAttributes FirstsAttributes, const FAttributes SecondAttributes, FAttributes& out)
+FAttributes UStats::SumAttributes(const FAttributes FirstsAttributes, const FAttributes SecondAttributes)
 {
-	//UStruct* object = Cast<UStruct, FAttributes>(&FirstsAttributes);
-	float x = 0;
-
-	
-	//TFieldIterator<UStructProperty> It2((UStruct*)&SecondAttributes);
 	TFieldIterator<UStructProperty> structIt1(FirstsAttributes.StaticStruct());
 	TFieldIterator<UStructProperty> structIt2(SecondAttributes.StaticStruct());
 
@@ -33,30 +28,9 @@ void UStats::SumAttributes(const FAttributes FirstsAttributes, const FAttributes
 			float* value1 = floatProperty1->GetPropertyValuePtr_InContainer((char*)&FirstsAttributes + nextStructShift);
 			FString str = FString::SanitizeFloat(*value1);
 			*value1 += *floatProperty2->GetPropertyValuePtr_InContainer((char*)&SecondAttributes + nextStructShift);
-			/*float* value1 = floatProperty1->GetPropertyValuePtr_InContainer(structProperty1->Struct);
-			*value1 += *floatProperty2->GetPropertyValuePtr_InContainer(structProperty2->Struct);
-			*/
-			//floatProperty1->SetFloatingPointPropertyValue((UObject*)structProperty1->Struct, *value1);
-			//i++;
-			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, str);			
 		}
 		nextStructShift += structIt1->Struct->PropertiesSize;
 	}
-		//UFloatProperty* Property1 = *It1;
-		//UFloatProperty* Property2 = *It2;
-		//
-		//float* value1 = Property1->GetPropertyValuePtr_InContainer((UObject*)&FirstsAttributes);
-		//*value1 += *Property2->GetPropertyValuePtr_InContainer((UObject*)&SecondAttributes);
-		//FString str = FString::SanitizeFloat(*value1 );
-		//Property1->SetFloatingPointPropertyValue((UObject*)&FirstsAttributes, *value1 + *value2);
-
-
-
-
-		//FString str = FString::FromInt(x);
-		//#if UE_BUILD_DEBUG
-		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, str);
-		//#endif
-
-	out = FirstsAttributes;
+	return FirstsAttributes;
+	//out = FirstsAttributes;
 }
