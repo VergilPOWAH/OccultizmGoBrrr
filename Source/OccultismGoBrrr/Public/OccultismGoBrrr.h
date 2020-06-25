@@ -3,4 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EngineMinimal.h"
+#include "Engine/Engine.h"
 
