@@ -3,11 +3,27 @@
 
 #include "OCBaseCharacter.h"
 #include "AbilitySystemGlobals.h"
+#include "Abilities/OCGameplayAbility.h"
 
 // Sets default values
 AOCBaseCharacter::AOCBaseCharacter()
 {
 	AbilitySystemComponent = CreateDefaultSubobject<UOCAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AttributeSet = CreateDefaultSubobject<UOCCharacterAttributeSet>(TEXT("AttributeSet"));
+	
+	CharacterLevel = 1;
+}
+
+void AOCBaseCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	// Initialize our abilities
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+		AddStartupGameplayAbilities();
+	}
 }
 
 float AOCBaseCharacter::GetHealth() const
@@ -38,9 +54,78 @@ float AOCBaseCharacter::GetMoveSpeed() const
 	return AttributeSet->GetMoveSpeed();
 }
 
+int32 AOCBaseCharacter::GetCharacterLevel() const
+{
+	return CharacterLevel;
+}
+
+bool AOCBaseCharacter::SetCharacterLevel(int32 NewLevel)
+{
+	if (CharacterLevel != NewLevel && NewLevel > 0)
+	{
+		// Our level changed so we need to refresh abilities
+		RemoveStartupGameplayAbilities();
+		CharacterLevel = NewLevel;
+		AddStartupGameplayAbilities();
+
+		return true;
+	}
+	return false;
+}
+
 UAbilitySystemComponent* AOCBaseCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+void AOCBaseCharacter::AddStartupGameplayAbilities()
+{
+	check(AbilitySystemComponent);
+
+	// Grant abilities, but only on the server	
+	for (TSubclassOf<UOCGameplayAbility>& StartupAbility : GameplayAbilities)
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(StartupAbility, GetCharacterLevel(), INDEX_NONE, this));
+	}
+
+	// Now apply passives
+	for (TSubclassOf<UGameplayEffect>& GameplayEffect : PassiveGameplayEffects)
+	{
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+
+		FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffect, GetCharacterLevel(), EffectContext);
+		if (NewHandle.IsValid())
+		{
+			FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent);
+		}
+	}
+}
+
+void AOCBaseCharacter::RemoveStartupGameplayAbilities()
+{
+	check(AbilitySystemComponent);
+
+	// Remove any abilities added from a previous call
+	TArray<FGameplayAbilitySpecHandle> AbilitiesToRemove;
+	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
+	{
+		if ((Spec.SourceObject == this) && GameplayAbilities.Contains(Spec.Ability->GetClass()))
+		{
+			AbilitiesToRemove.Add(Spec.Handle);
+		}
+	}
+
+	// Do in two passes so the removal happens after we have the full list
+	for (int32 i = 0; i < AbilitiesToRemove.Num(); i++)
+	{
+		AbilitySystemComponent->ClearAbility(AbilitiesToRemove[i]);
+	}
+
+	// Remove all of the passive gameplay effects that were applied by this character
+	FGameplayEffectQuery Query;
+	Query.EffectSource = this;
+	AbilitySystemComponent->RemoveActiveEffects(Query);
 }
 
 void AOCBaseCharacter::HandleDamage(float DamageAmount, const FHitResult& HitInfo, const FGameplayTagContainer& DamageTags, AOCBaseCharacter* InstigatorCharacter, AActor* DamageCauser)

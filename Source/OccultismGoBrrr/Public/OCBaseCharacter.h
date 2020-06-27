@@ -18,8 +18,18 @@ class OCCULTISMGOBRRR_API AOCBaseCharacter : public ACharacter, public IAbilityS
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	AOCBaseCharacter();
+	virtual void PossessedBy(AController* NewController) override;
+	//virtual void UnPossessed() override;
+
+	// Implement IAbilitySystemInterface
+	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UPROPERTY()
+	UOCAbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY()
+	UOCCharacterAttributeSet* AttributeSet;
 
 	/** Returns current health, will be 0 if dead */
 	UFUNCTION(BlueprintCallable)
@@ -41,16 +51,28 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual float GetMoveSpeed() const;
 
-	// Implement IAbilitySystemInterface
-	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	/** Returns the character level that is passed to the ability system */
+	UFUNCTION(BlueprintCallable)
+	virtual int32 GetCharacterLevel() const;
 
-	UPROPERTY()
-	UOCAbilitySystemComponent* AbilitySystemComponent;
+	/** Modifies the character level, this may change abilities. Returns true on success */
+	UFUNCTION(BlueprintCallable)
+	virtual bool SetCharacterLevel(int32 NewLevel);
 
-	UPROPERTY()
-	UOCCharacterAttributeSet* AttributeSet;
 	
 protected:
+
+	/** The level of this character, should not be modified directly once it has already spawned */
+	UPROPERTY(EditAnywhere, Category = Abilities)
+	int32 CharacterLevel;
+
+	/** Abilities to grant to this character on creation. These will be activated by tag or event and are not bound to specific inputs */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Abilities)
+	TArray<TSubclassOf<UOCGameplayAbility>> GameplayAbilities;
+	
+	/** Passive gameplay effects applied on creation */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Abilities)
+	TArray<TSubclassOf<UGameplayEffect>> PassiveGameplayEffects;
 
 	/**
 	 * Called when character takes damage, which may have killed them
@@ -62,7 +84,7 @@ protected:
 	 * @param DamageCauser The actual actor that did the damage, might be a weapon or projectile
 	 */
 	UFUNCTION(BlueprintImplementableEvent)
-		void OnDamaged(float DamageAmount, const FHitResult& HitInfo, const struct FGameplayTagContainer& DamageTags, AOCBaseCharacter* InstigatorCharacter, AActor* DamageCauser);
+	void OnDamaged(float DamageAmount, const FHitResult& HitInfo, const struct FGameplayTagContainer& DamageTags, AOCBaseCharacter* InstigatorCharacter, AActor* DamageCauser);
 
 	/**
 	 * Called when health is changed, either from healing or from being damaged
@@ -72,7 +94,7 @@ protected:
 	 * @param EventTags The gameplay tags of the event that changed mana
 	 */
 	UFUNCTION(BlueprintImplementableEvent)
-		void OnHealthChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
+	void OnHealthChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
 
 	/**
 	 * Called when mana is changed, either from healing or from being used as a cost
@@ -81,7 +103,7 @@ protected:
 	 * @param EventTags The gameplay tags of the event that changed mana
 	 */
 	UFUNCTION(BlueprintImplementableEvent)
-		void OnManaChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
+	void OnManaChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
 
 	/**
 	 * Called when movement speed is changed
@@ -90,7 +112,14 @@ protected:
 	 * @param EventTags The gameplay tags of the event that changed mana
 	 */
 	UFUNCTION(BlueprintImplementableEvent)
-		void OnMoveSpeedChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
+	void OnMoveSpeedChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
+
+	/** Apply the startup gameplay abilities and effects */
+	void AddStartupGameplayAbilities();
+
+	/** Attempts to remove any startup gameplay abilities */
+	void RemoveStartupGameplayAbilities();
+
 
 	virtual void HandleDamage(float DamageAmount, const FHitResult& HitInfo, const struct FGameplayTagContainer& DamageTags, AOCBaseCharacter* InstigatorCharacter, AActor* DamageCauser);
 	virtual void HandleHealthChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
