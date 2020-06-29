@@ -66,6 +66,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Abilities)
 	int32 CharacterLevel;
 
+	/** If true we have initialized our abilities */
+	UPROPERTY()
+	int32 bAbilitiesInitialized;
+
 	/** Abilities to grant to this character on creation. These will be activated by tag or event and are not bound to specific inputs */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Abilities)
 	TArray<TSubclassOf<UOCGameplayAbility>> GameplayAbilities;

@@ -10,7 +10,7 @@ AOCBaseCharacter::AOCBaseCharacter()
 {
 	AbilitySystemComponent = CreateDefaultSubobject<UOCAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AttributeSet = CreateDefaultSubobject<UOCCharacterAttributeSet>(TEXT("AttributeSet"));
-	
+
 	CharacterLevel = 1;
 }
 
@@ -82,23 +82,27 @@ void AOCBaseCharacter::AddStartupGameplayAbilities()
 {
 	check(AbilitySystemComponent);
 
-	// Grant abilities, but only on the server	
-	for (TSubclassOf<UOCGameplayAbility>& StartupAbility : GameplayAbilities)
+	if (!bAbilitiesInitialized)
 	{
-		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(StartupAbility, GetCharacterLevel(), INDEX_NONE, this));
-	}
-
-	// Now apply passives
-	for (TSubclassOf<UGameplayEffect>& GameplayEffect : PassiveGameplayEffects)
-	{
-		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
-		EffectContext.AddSourceObject(this);
-
-		FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffect, GetCharacterLevel(), EffectContext);
-		if (NewHandle.IsValid())
+		// Grant abilities, but only on the server	
+		for (TSubclassOf<UOCGameplayAbility>& StartupAbility : GameplayAbilities)
 		{
-			FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent);
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(StartupAbility, GetCharacterLevel(), INDEX_NONE, this));
 		}
+
+		// Now apply passives
+		for (TSubclassOf<UGameplayEffect>& GameplayEffect : PassiveGameplayEffects)
+		{
+			FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+			EffectContext.AddSourceObject(this);
+
+			FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffect, GetCharacterLevel(), EffectContext);
+			if (NewHandle.IsValid())
+			{
+				FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent);
+			}
+		}
+		bAbilitiesInitialized = true;
 	}
 }
 
