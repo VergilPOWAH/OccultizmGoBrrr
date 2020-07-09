@@ -58,8 +58,11 @@ public:
 	/** Modifies the character level, this may change abilities. Returns true on success */
 	UFUNCTION(BlueprintCallable)
 	virtual bool SetCharacterLevel(int32 NewLevel);
-
 	
+	/** Adds ability if needed */
+	UFUNCTION(BlueprintCallable)
+	void AddGameplayAbility(TSubclassOf<UGameplayAbility> Ability);
+
 protected:
 
 	/** The level of this character, should not be modified directly once it has already spawned */
@@ -77,6 +80,10 @@ protected:
 	/** Passive gameplay effects applied on creation */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Abilities)
 	TArray<TSubclassOf<UGameplayEffect>> PassiveGameplayEffects;
+
+	/** Array of granted abilities */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory)
+	TArray<FGameplayAbilitySpecHandle> GivenAbilities;
 
 	/**
 	 * Called when character takes damage, which may have killed them
@@ -99,6 +106,9 @@ protected:
 	 */
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnHealthChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnDeath(const struct FGameplayTagContainer& EventTags);
 
 	/**
 	 * Called when mana is changed, either from healing or from being used as a cost
@@ -123,7 +133,6 @@ protected:
 
 	/** Attempts to remove any startup gameplay abilities */
 	void RemoveStartupGameplayAbilities();
-
 
 	virtual void HandleDamage(float DamageAmount, const FHitResult& HitInfo, const struct FGameplayTagContainer& DamageTags, AOCBaseCharacter* InstigatorCharacter, AActor* DamageCauser);
 	virtual void HandleHealthChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);

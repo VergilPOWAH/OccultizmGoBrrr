@@ -73,6 +73,15 @@ bool AOCBaseCharacter::SetCharacterLevel(int32 NewLevel)
 	return false;
 }
 
+void AOCBaseCharacter::AddGameplayAbility(TSubclassOf<UGameplayAbility> Ability)
+{
+	if (!AbilitySystemComponent->FindAbilitySpecFromClass(Ability))
+	{
+		FGameplayAbilitySpecHandle SpecHandle = AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(Ability, GetCharacterLevel()));
+		GivenAbilities.Add(SpecHandle);
+	}
+}
+
 UAbilitySystemComponent* AOCBaseCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
@@ -140,6 +149,10 @@ void AOCBaseCharacter::HandleDamage(float DamageAmount, const FHitResult& HitInf
 void AOCBaseCharacter::HandleHealthChanged(float DeltaValue, const FGameplayTagContainer& EventTags)
 {
 	OnHealthChanged(DeltaValue, EventTags);
+	if (GetHealth() <= 0.f)
+	{
+		OnDeath(EventTags);
+	}
 }
 
 void AOCBaseCharacter::HandleManaChanged(float DeltaValue, const FGameplayTagContainer& EventTags)
