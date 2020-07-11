@@ -11,3 +11,8 @@ bool UOCItem::IsConsumable() const
 	}
 	return false;
 }
+
+FPrimaryAssetId UOCItem::GetPrimaryAssetId() const
+{
+	return FPrimaryAssetId(ItemType, GetFName());
+}

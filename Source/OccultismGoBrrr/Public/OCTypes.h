@@ -63,7 +63,7 @@ struct OCCULTISMGOBRRR_API FOCItemData
 		, ItemLevel(InItemLevel)
 	{}
 
-	/** The number of instances of this item in the inventory, can never be below 1 */
+	/** The item data asset */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 	UOCItem* Item;
 
@@ -71,7 +71,7 @@ struct OCCULTISMGOBRRR_API FOCItemData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 	int32 ItemCount;
 
-	/** The level of this item. This level is shared for all instances, can never be below 1 */
+	/** The level of this item. Can never be below 1 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 	int32 ItemLevel;
 

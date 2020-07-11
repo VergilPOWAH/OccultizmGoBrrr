@@ -8,6 +8,8 @@
 #include "OCAssetManager.h"
 #include "OCItem.generated.h"
 
+
+class UOCGameplayAbility;
 /**
  * 
  */
@@ -50,4 +52,11 @@ public:
 	/** Returns if the item is consumable (MaxCount <= 0)*/
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = Max)
 	bool IsConsumable() const;
+
+	/** Ability to grant if this item is slotted */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Abilities)
+	TSubclassOf<UOCGameplayAbility> GrantedAbility;
+
+	/** Overridden to use saved type */
+	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
 };
